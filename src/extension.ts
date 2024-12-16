@@ -22,7 +22,7 @@ import {
 } from "./templates";
 import { analyzeDependencies } from "./utils";
 
-export function activate (_context: ExtensionContext) {
+export function activate(_context: ExtensionContext) {
   analyzeDependencies();
 
   commands.registerCommand("extension.new-feature-bloc", async (uri: Uri) => {
@@ -34,7 +34,7 @@ export function activate (_context: ExtensionContext) {
   });
 }
 
-export async function Go (uri: Uri, useCubit: boolean) {
+export async function Go(uri: Uri, useCubit: boolean) {
   // Show feature prompt
   let featureName = await promptForFeatureName();
 
@@ -49,33 +49,37 @@ export async function Go (uri: Uri, useCubit: boolean) {
   try {
     targetDirectory = await getTargetDirectory(uri);
   } catch (error) {
-    window.showErrorMessage(error.message);
+    window.showErrorMessage(
+      `Error:
+        ${error instanceof Error ? error.message : JSON.stringify(error)}`,
+    );
+    return;
   }
 
   const useEquatable = true;
 
   const pascalCaseFeatureName = changeCase.pascalCase(
-    featureName.toLowerCase()
+    featureName.toLowerCase(),
   );
   try {
     await generateFeatureArchitecture(
       `${featureName}`,
       targetDirectory,
       useEquatable,
-      useCubit
+      useCubit,
     );
     window.showInformationMessage(
-      `Successfully Generated ${pascalCaseFeatureName} Feature`
+      `Successfully Generated ${pascalCaseFeatureName} Feature`,
     );
   } catch (error) {
     window.showErrorMessage(
       `Error:
-        ${error instanceof Error ? error.message : JSON.stringify(error)}`
+        ${error instanceof Error ? error.message : JSON.stringify(error)}`,
     );
   }
 }
 
-export function isNameValid (featureName: string | undefined): boolean {
+export function isNameValid(featureName: string | undefined): boolean {
   // Check if feature name exists
   if (!featureName) {
     return false;
@@ -89,7 +93,7 @@ export function isNameValid (featureName: string | undefined): boolean {
   return true;
 }
 
-export async function getTargetDirectory (uri: Uri): Promise<string> {
+export async function getTargetDirectory(uri: Uri): Promise<string> {
   let targetDirectory;
   if (_.isNil(_.get(uri, "fsPath")) || !lstatSync(uri.fsPath).isDirectory()) {
     targetDirectory = await promptForTargetDirectory();
@@ -103,7 +107,7 @@ export async function getTargetDirectory (uri: Uri): Promise<string> {
   return targetDirectory;
 }
 
-export async function promptForTargetDirectory (): Promise<string | undefined> {
+export async function promptForTargetDirectory(): Promise<string | undefined> {
   const options: OpenDialogOptions = {
     canSelectMany: false,
     openLabel: "Select a folder to create the feature in",
@@ -118,7 +122,7 @@ export async function promptForTargetDirectory (): Promise<string | undefined> {
   });
 }
 
-export function promptForFeatureName (): Thenable<string | undefined> {
+export function promptForFeatureName(): Thenable<string | undefined> {
   const blocNamePromptOptions: InputBoxOptions = {
     prompt: "Feature Name",
     placeHolder: "counter",
@@ -126,7 +130,7 @@ export function promptForFeatureName (): Thenable<string | undefined> {
   return window.showInputBox(blocNamePromptOptions);
 }
 
-export async function promptForUseEquatable (): Promise<boolean> {
+export async function promptForUseEquatable(): Promise<boolean> {
   const useEquatablePromptValues: string[] = ["no (default)", "yes (advanced)"];
   const useEquatablePromptOptions: QuickPickOptions = {
     placeHolder:
@@ -136,16 +140,16 @@ export async function promptForUseEquatable (): Promise<boolean> {
 
   const answer = await window.showQuickPick(
     useEquatablePromptValues,
-    useEquatablePromptOptions
+    useEquatablePromptOptions,
   );
 
   return answer === "yes (advanced)";
 }
 
-async function generateBlocCode (
+async function generateBlocCode(
   blocName: string,
   targetDirectory: string,
-  useEquatable: boolean
+  useEquatable: boolean,
 ) {
   const blocDirectoryPath = `${targetDirectory}/bloc`;
   if (!existsSync(blocDirectoryPath)) {
@@ -159,10 +163,10 @@ async function generateBlocCode (
   ]);
 }
 
-async function generateCubitCode (
+async function generateCubitCode(
   blocName: string,
   targetDirectory: string,
-  useEquatable: boolean
+  useEquatable: boolean,
 ) {
   const blocDirectoryPath = `${targetDirectory}/cubit`;
   if (!existsSync(blocDirectoryPath)) {
@@ -175,11 +179,11 @@ async function generateCubitCode (
   ]);
 }
 
-export async function generateFeatureArchitecture (
+export async function generateFeatureArchitecture(
   featureName: string,
   targetDirectory: string,
   useEquatable: boolean,
-  useCubit: boolean
+  useCubit: boolean,
 ) {
   // Create the features directory if its does not exist yet
   const featuresDirectoryPath = getFeaturesDirectoryPath(targetDirectory);
@@ -195,14 +199,14 @@ export async function generateFeatureArchitecture (
   const dataDirectoryPath = path.join(featureDirectoryPath, "data");
   await createDirectories(dataDirectoryPath, [
     "datasources",
-    "models",
+    "entities",
     "repositories",
   ]);
 
   // Create the domain layer
   const domainDirectoryPath = path.join(featureDirectoryPath, "domain");
   await createDirectories(domainDirectoryPath, [
-    "entities",
+    "models",
     "repositories",
     "usecases",
   ]);
@@ -210,7 +214,7 @@ export async function generateFeatureArchitecture (
   // Create the presentation layer
   const presentationDirectoryPath = path.join(
     featureDirectoryPath,
-    "presentation"
+    "presentation",
   );
   await createDirectories(presentationDirectoryPath, [
     useCubit ? "cubit" : "bloc",
@@ -220,11 +224,19 @@ export async function generateFeatureArchitecture (
 
   // Generate the bloc code in the presentation layer
   useCubit
-    ? await generateCubitCode(featureName, presentationDirectoryPath, useEquatable)
-    : await generateBlocCode(featureName, presentationDirectoryPath, useEquatable);
+    ? await generateCubitCode(
+        featureName,
+        presentationDirectoryPath,
+        useEquatable,
+      )
+    : await generateBlocCode(
+        featureName,
+        presentationDirectoryPath,
+        useEquatable,
+      );
 }
 
-export function getFeaturesDirectoryPath (currentDirectory: string): string {
+export function getFeaturesDirectoryPath(currentDirectory: string): string {
   // Split the path
   const splitPath = currentDirectory.split(path.sep);
 
@@ -244,20 +256,20 @@ export function getFeaturesDirectoryPath (currentDirectory: string): string {
   return isDirectoryAlreadyFeatures ? result : path.join(result, "features");
 }
 
-export async function createDirectories (
+export async function createDirectories(
   targetDirectory: string,
-  childDirectories: string[]
+  childDirectories: string[],
 ): Promise<void> {
   // Create the parent directory
   await createDirectory(targetDirectory);
   // Creat the children
   childDirectories.map(
     async (directory) =>
-      await createDirectory(path.join(targetDirectory, directory))
+      await createDirectory(path.join(targetDirectory, directory)),
   );
 }
 
-function createDirectory (targetDirectory: string): Promise<void> {
+function createDirectory(targetDirectory: string): Promise<void> {
   return new Promise((resolve, reject) => {
     mkdirp(targetDirectory, (error) => {
       if (error) {
@@ -268,10 +280,10 @@ function createDirectory (targetDirectory: string): Promise<void> {
   });
 }
 
-function createBlocEventTemplate (
+function createBlocEventTemplate(
   blocName: string,
   targetDirectory: string,
-  useEquatable: boolean
+  useEquatable: boolean,
 ) {
   const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
   const targetPath = `${targetDirectory}/bloc/${snakeCaseBlocName}_event.dart`;
@@ -289,15 +301,15 @@ function createBlocEventTemplate (
           return;
         }
         resolve(true);
-      }
+      },
     );
   });
 }
 
-function createBlocStateTemplate (
+function createBlocStateTemplate(
   blocName: string,
   targetDirectory: string,
-  useEquatable: boolean
+  useEquatable: boolean,
 ) {
   const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
   const targetPath = `${targetDirectory}/bloc/${snakeCaseBlocName}_state.dart`;
@@ -315,15 +327,15 @@ function createBlocStateTemplate (
           return;
         }
         resolve(true);
-      }
+      },
     );
   });
 }
 
-function createBlocTemplate (
+function createBlocTemplate(
   blocName: string,
   targetDirectory: string,
-  useEquatable: boolean
+  useEquatable: boolean,
 ) {
   const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
   const targetPath = `${targetDirectory}/bloc/${snakeCaseBlocName}_bloc.dart`;
@@ -341,15 +353,15 @@ function createBlocTemplate (
           return;
         }
         resolve(true);
-      }
+      },
     );
   });
 }
 
-function createCubitStateTemplate (
+function createCubitStateTemplate(
   blocName: string,
   targetDirectory: string,
-  useEquatable: boolean
+  useEquatable: boolean,
 ) {
   const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
   const targetPath = `${targetDirectory}/cubit/${snakeCaseBlocName}_state.dart`;
@@ -367,15 +379,15 @@ function createCubitStateTemplate (
           return;
         }
         resolve(true);
-      }
+      },
     );
   });
 }
 
-function createCubitTemplate (
+function createCubitTemplate(
   blocName: string,
   targetDirectory: string,
-  useEquatable: boolean
+  useEquatable: boolean,
 ) {
   const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
   const targetPath = `${targetDirectory}/cubit/${snakeCaseBlocName}_cubit.dart`;
@@ -393,7 +405,7 @@ function createCubitTemplate (
           return;
         }
         resolve(true);
-      }
+      },
     );
   });
 }

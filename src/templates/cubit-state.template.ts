@@ -1,38 +1,38 @@
 import * as changeCase from "change-case";
 
-export function getCubitStateTemplate (
+export function getCubitStateTemplate(
   cubitName: string,
-  useEquatable: boolean
+  useEquatable: boolean,
 ): string {
   return useEquatable
     ? getEquatableCubitStateTemplate(cubitName)
     : getDefaultCubitStateTemplate(cubitName);
 }
 
-function getEquatableCubitStateTemplate (cubitName: string): string {
+function getEquatableCubitStateTemplate(cubitName: string): string {
   const pascalCaseCubitName = changeCase.pascalCase(cubitName.toLowerCase());
   const snakeCaseCubitName = changeCase.snakeCase(cubitName.toLowerCase());
   return `part of '${snakeCaseCubitName}_cubit.dart';
 
-abstract class ${pascalCaseCubitName}State extends Equatable {
+sealed class ${pascalCaseCubitName}State extends Equatable {
   const ${pascalCaseCubitName}State();
 
   @override
   List<Object> get props => [];
 }
 
-class ${pascalCaseCubitName}Initial extends ${pascalCaseCubitName}State {}
+final class ${pascalCaseCubitName}Initial extends ${pascalCaseCubitName}State {}
 `;
 }
 
-function getDefaultCubitStateTemplate (cubitName: string): string {
+function getDefaultCubitStateTemplate(cubitName: string): string {
   const pascalCaseCubitName = changeCase.pascalCase(cubitName.toLowerCase());
   const snakeCaseCubitName = changeCase.snakeCase(cubitName.toLowerCase());
   return `part of '${snakeCaseCubitName}_cubit.dart';
 
 @immutable
-abstract class ${pascalCaseCubitName}State {}
+sealed class ${pascalCaseCubitName}State {}
 
-class ${pascalCaseCubitName}Initial extends ${pascalCaseCubitName}State {}
+final class ${pascalCaseCubitName}Initial extends ${pascalCaseCubitName}State {}
 `;
 }

@@ -1,20 +1,20 @@
 import * as changeCase from "change-case";
 
-export function getBlocEventTemplate (
+export function getBlocEventTemplate(
   blocName: string,
-  useEquatable: boolean
+  useEquatable: boolean,
 ): string {
   return useEquatable
     ? getEquatableBlocEventTemplate(blocName)
     : getDefaultBlocEventTemplate(blocName);
 }
 
-function getEquatableBlocEventTemplate (blocName: string): string {
+function getEquatableBlocEventTemplate(blocName: string): string {
   const pascalCaseBlocName = changeCase.pascalCase(blocName.toLowerCase());
   const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
   return `part of '${snakeCaseBlocName}_bloc.dart';
 
-abstract class ${pascalCaseBlocName}Event extends Equatable {
+sealed class ${pascalCaseBlocName}Event extends Equatable {
   const ${pascalCaseBlocName}Event();
 
   @override
@@ -23,11 +23,11 @@ abstract class ${pascalCaseBlocName}Event extends Equatable {
 `;
 }
 
-function getDefaultBlocEventTemplate (blocName: string): string {
+function getDefaultBlocEventTemplate(blocName: string): string {
   const pascalCaseBlocName = changeCase.pascalCase(blocName.toLowerCase());
   const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
   return `part of '${snakeCaseBlocName}_bloc.dart';
 @immutable
-abstract class ${pascalCaseBlocName}Event {}
+sealed class ${pascalCaseBlocName}Event {}
 `;
 }

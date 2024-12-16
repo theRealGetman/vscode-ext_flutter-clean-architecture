@@ -27,8 +27,8 @@ export async function analyzeDependencies() {
           callback: () => {
             env.openExternal(
               Uri.parse(
-                "https://github.com/felangel/equatable/blob/master/doc/migration_guides/migration-0.6.0.md"
-              )
+                "https://github.com/felangel/equatable/blob/master/doc/migration_guides/migration-0.6.0.md",
+              ),
             );
           },
         },
@@ -94,13 +94,13 @@ export async function analyzeDependencies() {
   const dependencies = _.get(pubspec, "dependencies", {});
   const devDependencies = _.get(pubspec, "dev_dependencies", {});
 
-  checkForUpgrades(dependenciesToAnalyze, dependencies);
-  checkForUpgrades(devDependenciesToAnalyze, devDependencies);
+  checkForUpgrades(dependenciesToAnalyze, [dependencies]);
+  checkForUpgrades(devDependenciesToAnalyze, [devDependencies]);
 }
 
 function checkForUpgrades(
   dependenciesToAnalyze: Dependency[],
-  dependencies: object[]
+  dependencies: object[],
 ) {
   for (let i = 0; i < dependenciesToAnalyze.length; i++) {
     const dependency = dependenciesToAnalyze[i];
@@ -113,13 +113,13 @@ function checkForUpgrades(
       const minVersion = _.get(
         semver.minVersion(dependencyVersion),
         "version",
-        "0.0.0"
+        "0.0.0",
       );
       if (!semver.satisfies(minVersion, dependency.version)) {
         window
           .showWarningMessage(
             `This workspace contains an unsupported version of ${dependency.name}. Please update to ${dependency.version}.`,
-            ...dependency.actions.map((action) => action.name).concat("Update")
+            ...dependency.actions.map((action) => action.name).concat("Update"),
           )
           .then((invokedAction) => {
             if (invokedAction === "Update") {
@@ -130,7 +130,7 @@ function checkForUpgrades(
               });
             }
             const action = dependency.actions.find(
-              (action) => action.name === invokedAction
+              (action) => action.name === invokedAction,
             );
             if (!_.isNil(action)) {
               action.callback();
